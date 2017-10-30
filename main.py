@@ -5,6 +5,7 @@ import os
 import matplotlib.image as mpimg
 from functools import reduce
 import random
+import scipy.spatial.distance as dist
 
 
 class ConcurrentNetwok:
@@ -14,6 +15,7 @@ class ConcurrentNetwok:
         self.entry_layer = np.zeros(self.side ** 2)
         self.neurons = np.zeros(self.n)
         self.weights = np.zeros((self.side ** 2, self.n))
+        self.beta = 10
 
         self.m = 5
         self.test_images = np.zeros((self.m, self.side, self.side))
@@ -35,11 +37,8 @@ class ConcurrentNetwok:
                         self.test_images[i, y, x] = self.test_images[i, y, x] / s
                 i += 1
 
-    def activate(self, x):
-        if x > 0:
-            return 1
-        else:
-            return -1
+    def out_value(self, j):
+        return dist.cosine(self.entry_layer, self.weights[:, j])
 
     def init_weights(self):
         # init weights with random values
@@ -55,14 +54,25 @@ class ConcurrentNetwok:
     def train(self):
         self.init_weights()
 
-        for i in range(0, self.n):
-            for j in range(i + 1, self.n):
-                s = 0
-                if i != j:
-                    for k in range(0, self.m):
-                        s += self.test_images[k].ravel()[i] * self.test_images[k].ravel()[j]
-                self.weights[i, j] = s
-                self.weights[j, i] = self.weights[i, j]
+        for image in self.test_images:
+            self.entry_layer = image.ravel()
+
+            # find out values
+            for i in range(0, len(self.neurons)):
+                self.neurons[i] = self.out_value(i)
+
+            # find neuron - winner
+            maximum = 0
+            max_pos = 0
+            for i in range(0, len(self.neurons)):
+                if self.neurons[i] >= maximum:
+                    maximum = self.neurons[i]
+                    max_pos = i
+
+            # powerup synaptic connections
+            for i in range(0, len(self.weights)):
+                self.weights[i, max_pos] = self.weights[i, max_pos] +\
+                                           self.beta * (self.entry_layer[i] - self.weights[i, max_pos])
 
     def play(self, image):
         neurons_t = np.array(image.ravel())
