@@ -17,6 +17,7 @@ class ConcurrentNetwok:
         self.w = np.zeros((self.side ** 2, self.n))
         self.b = 10
         self.victories = np.zeros((self.n))
+        self.max_cup = 0.3
 
         self.m = 5
         self.test_images = np.zeros((self.m, self.side, self.side))
@@ -52,34 +53,52 @@ class ConcurrentNetwok:
             s = np.linalg.norm(self.w[i])
             self.w[i] = list(map((lambda x: x / s), self.w[i]))
 
+    def find_winner(self):
+        minimum = 0
+        min_pos = 0
+        for j in range(0, len(self.y)):
+            value = self.victories[j] * dist.euclidean(self.x, self.w[:, j])
+            if j == 0:
+                minimum = value
+            if value <= minimum:
+                minimum = value
+                min_pos = j
+        self.victories[min_pos] += 1
+        return min_pos
+
     def train(self):
         self.init_w()
 
-        for image in self.test_images:
-            self.x = image.ravel()
+        break_flag = False
+        while True:
+            for image in self.test_images:
+                self.x = image.ravel()
 
-            # find out values
-            for i in range(0, len(self.y)):
-                self.y[i] = self.out_value(i)
+                # find out values
+                for i in range(0, len(self.y)):
+                    self.y[i] = self.out_value(i)
 
-            # find winner v.2
-            minimum = 0
-            min_pos = 0
-            for j in range(0, len(self.y)):
-                value = self.victories[j] * dist.euclidean(self.x, self.w[:, j])
-                if j == 0:
-                    minimum = value
-                if value <= minimum:
-                    minimum = value
-                    min_pos = j
-            self.victories[min_pos] += 1
+                winner_pos = self.find_winner()
 
-            # powerup synaptic connections
-            self.w_new = self.w
-            for i in range(0, len(self.w)):
-                self.w_new[i, min_pos] = (self.w[i, min_pos] + self.b * (self.x[i] - self.w[i, min_pos])) /\
-                        np.linalg.norm(list(map(operator.add, self.w[:, min_pos], list(map((lambda x: self.b * x), list(map(operator.sub, self.x, self.w[:, min_pos])))))))
-            self.w = self.w_new
+                # powerup synaptic connections
+                self.w_new = self.w
+                for i in range(0, len(self.w)):
+                    self.w_new[i, winner_pos] = (self.w[i, winner_pos] + self.b * (self.x[i] - self.w[i, winner_pos])) /\
+                            np.linalg.norm(list(map(operator.add, self.w[:, winner_pos], list(map((lambda x: self.b * x), list(map(operator.sub, self.x, self.w[:, winner_pos])))))))
+                self.w = self.w_new
+
+                maximum = 0
+                for i in range(0, len(self.w)):
+                    value = dist.euclidean(self.x[i], self.w[i, winner_pos])
+                    if value >= maximum:
+                        maximum = value
+
+                print(maximum)
+                if maximum <= self.max_cup:
+                    break_flag = True
+
+            if break_flag:
+                break
 
     def play(self, image):
         y_t = np.array(image.ravel())
