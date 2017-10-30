@@ -9,7 +9,8 @@ class Noizer:
     def __init__(self):
         self.src_dir = "original/"
         self.dst_dir = "noized/"
-        self.noize_levels = [10, 20, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+        #  self.noize_levels = [10, 20, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+        self.noize_levels = [10, ]
         self.orig_images = []
         self.num_samples = 10
 
