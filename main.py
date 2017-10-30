@@ -70,9 +70,11 @@ class ConcurrentNetwok:
                     max_pos = i
 
             # powerup synaptic connections
+            self.w_new = self.w
             for i in range(0, len(self.w)):
-                self.w[i, max_pos] = (self.w[i, max_pos] + self.b * (self.x[i] - self.w[i, max_pos])) /\
+                self.w_new[i, max_pos] = (self.w[i, max_pos] + self.b * (self.x[i] - self.w[i, max_pos])) /\
                         np.linalg.norm(list(map(operator.add, self.w[:, max_pos], list(map((lambda x: self.b * x), list(map(operator.sub, self.x, self.w[:, max_pos])))))))
+            self.w = self.w_new
 
     def play(self, image):
         y_t = np.array(image.ravel())
