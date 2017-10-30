@@ -6,12 +6,13 @@ import matplotlib.image as mpimg
 import random
 import scipy.spatial.distance as dist
 import operator
+import sys
 
 
 class ConcurrentNetwok:
-    def __init__(self):
+    def __init__(self, n):
         self.side = 6
-        self.n = 3
+        self.n = n
         self.x = np.zeros(self.side ** 2)
         self.y = np.zeros(self.n)
         self.w = np.zeros((self.side ** 2, self.n))
@@ -66,6 +67,10 @@ class ConcurrentNetwok:
         self.victories[min_pos] += 1
         return min_pos
 
+    def calc_neurons(self):
+        for i in range(0, len(self.y)):
+            self.y[i] = self.out_value(i)
+
     def train(self):
         self.init_w()
 
@@ -74,10 +79,7 @@ class ConcurrentNetwok:
             for image in self.test_images:
                 self.x = image.ravel()
 
-                # find out values
-                for i in range(0, len(self.y)):
-                    self.y[i] = self.out_value(i)
-
+                self.calc_neurons()
                 winner_pos = self.find_winner()
 
                 # powerup synaptic connections
@@ -93,7 +95,6 @@ class ConcurrentNetwok:
                     if value >= maximum:
                         maximum = value
 
-                print(maximum)
                 if maximum <= self.max_cup:
                     break_flag = True
 
@@ -101,46 +102,27 @@ class ConcurrentNetwok:
                 break
 
     def play(self, image):
-        y_t = np.array(image.ravel())
-        y_t1 = np.zeros(self.n)
-
-        while True:
-            for i in range(0, self.n):
-                value = 0
-                for j in range(0, self.n):
-                    value += self.w[i][j] * y_t[j]
-                y_t1[i] = self.activate(value)
-
-            converged = True
-            for i in range(0, self.n):
-                if y_t[i] != y_t1[i]:
-                    converged = False
-                    break
-            if converged:
-                break
-
-            y_t = y_t1
-
-        res = np.zeros((self.side, self.side, 3))
-        for i in range(0, self.side):
-            for j in range(0, self.side):
-                value = y_t1[self.side * i + j]
-                if value < 0:
-                    value = 0
-                res[i, j] = value
-        return res
+        self.x = np.array(image.ravel())
+        self.calc_neurons()
+        return self.find_winner()
 
     def recognize(self):
         for _, _, files in os.walk(self.rec_dir):
             for _file in files:
                 f = mpimg.imread(self.rec_dir + _file)[:, :, 0]
-                mpimg.imsave(self.out_dir + _file, self.play(f))
+                cluster = self.play(f)
+                res = np.zeros((f.shape[0], f.shape[1], 3))
+                res[:, :, 0] = f
+                res[:, :, 1] = f
+                res[:, :, 2] = f
+                mpimg.imsave(self.out_dir + str(cluster) + "/" + _file, res)
 
     def run(self):
         self.load_test_images()
         self.train()
-        #  self.recognize()
+        self.recognize()
 
 
-net = ConcurrentNetwok()
-net.run()
+if __name__ == "__main__":
+    net = ConcurrentNetwok(int(sys.argv[1]))
+    net.run()

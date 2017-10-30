@@ -11,7 +11,7 @@ class Noizer:
         self.dst_dir = "noized/"
         self.noize_levels = [10, 20, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
         self.orig_images = []
-        self.num_samples = 100
+        self.num_samples = 10
 
     def open_images(self):
         for root, dirs, files in os.walk(self.src_dir):
