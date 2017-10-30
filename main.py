@@ -16,6 +16,7 @@ class ConcurrentNetwok:
         self.y = np.zeros(self.n)
         self.w = np.zeros((self.side ** 2, self.n))
         self.b = 10
+        self.victories = np.zeros((self.n))
 
         self.m = 5
         self.test_images = np.zeros((self.m, self.side, self.side))
@@ -61,19 +62,23 @@ class ConcurrentNetwok:
             for i in range(0, len(self.y)):
                 self.y[i] = self.out_value(i)
 
-            # find neuron - winner
-            maximum = 0
-            max_pos = 0
-            for i in range(0, len(self.y)):
-                if self.y[i] >= maximum:
-                    maximum = self.y[i]
-                    max_pos = i
+            # find winner v.2
+            minimum = 0
+            min_pos = 0
+            for j in range(0, len(self.y)):
+                value = self.victories[j] * dist.euclidean(self.x, self.w[:, j])
+                if j == 0:
+                    minimum = value
+                if value <= minimum:
+                    minimum = value
+                    min_pos = j
+            self.victories[min_pos] += 1
 
             # powerup synaptic connections
             self.w_new = self.w
             for i in range(0, len(self.w)):
-                self.w_new[i, max_pos] = (self.w[i, max_pos] + self.b * (self.x[i] - self.w[i, max_pos])) /\
-                        np.linalg.norm(list(map(operator.add, self.w[:, max_pos], list(map((lambda x: self.b * x), list(map(operator.sub, self.x, self.w[:, max_pos])))))))
+                self.w_new[i, min_pos] = (self.w[i, min_pos] + self.b * (self.x[i] - self.w[i, min_pos])) /\
+                        np.linalg.norm(list(map(operator.add, self.w[:, min_pos], list(map((lambda x: self.b * x), list(map(operator.sub, self.x, self.w[:, min_pos])))))))
             self.w = self.w_new
 
     def play(self, image):
