@@ -140,7 +140,6 @@ class ConcurrentNetwok:
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        print(sys.argv[1])
         net = ConcurrentNetwok(int(sys.argv[1]))
     else:
         net = ConcurrentNetwok()
